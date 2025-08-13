@@ -1,39 +1,57 @@
-
 # views/decliners.py
 from textual.app import ComposeResult
 from textual.containers import Vertical
-from textual.widgets import DataTable, Static
+from textual.widgets import DataTable, Static, Input
+
 
 class DeclinersView(Vertical):
-    """Decliner list that opens One‑Pager on Enter, without ever exiting the app."""
+    """Decliner list with search and safe Enter → One‑Pager (keyboard-first)."""
 
-    # Fallback keybinding in case the DataTable doesn't emit RowSelected
-    BINDINGS = [("enter", "open_selected", "Open One‑Pager")]
+    BINDINGS = [
+        ("enter", "open_selected", "Open One‑Pager"),   # while table focused
+        ("/", "focus_search", "Search"),
+        ("escape", "clear_search", "Clear Search"),
+        ("r", "refresh", "Refresh"),
+        ("down", "focus_table", "Table ↓"),
+        ("up", "focus_table", "Table ↑"),
+    ]
 
     def __init__(self, store, on_open_onepager, theme):
         super().__init__()
         self.store = store
-        self.on_open_onepager = on_open_onepager  # NON-async callback in App
+        self.on_open_onepager = on_open_onepager  # NON‑async callback in App
         self.theme = theme
-        self.table = DataTable()
-        self._columns_built = False
-        self._hint = Static("", id="decliners-hint")
 
+        self.search = Input(
+            placeholder="Search CustomerID…  (Press / to focus, Enter to move to table, Esc to clear)",
+            id="search",
+        )
+        self.table = DataTable()
+        self.hint = Static("", id="decliners-hint")
+
+        self._columns_built = False
+        self._all_rows = []   # full (unfiltered) rows cache
+
+    # ---------- layout ----------
     def compose(self) -> ComposeResult:
-        yield Static("Decliner Queue (YoY) — ↑/↓ select • Enter opens One‑Pager • R refresh", id="title")
+        yield Static("Decliner Queue (YoY) — ↑/↓ select • Enter opens One‑Pager • / search", id="title")
+        yield self.search
         yield self.table
-        yield self._hint
+        yield self.hint
 
     def on_mount(self):
+        # Table look & feel
         try:
             self.table.cursor_type = "row"
             self.table.show_header = True
             self.table.zebra_stripes = True
         except Exception:
             pass
+
         self._ensure_columns()
         self.refresh_rows()
-        # Focus table so Enter goes to it
+
+        # Focus table initially
         try:
             self.table.focus()
             if getattr(self.table, "row_count", 0) > 0:
@@ -44,6 +62,7 @@ class DeclinersView(Vertical):
         except Exception:
             pass
 
+    # ---------- columns / rows ----------
     def _ensure_columns(self):
         if self._columns_built:
             return
@@ -62,36 +81,138 @@ class DeclinersView(Vertical):
     def refresh_rows(self):
         self._ensure_columns()
         self._clear_rows()
-        rows = self.store.decliners(limit=50)
-        for r in rows:
-            # Prefer row keys if supported
-            try:
-                self.table.add_row(
-                    r.customer_id,
-                    f"${r.cy_sales:,.0f}",
-                    f"${r.py_sales:,.0f}",
-                    f"${r.yoy_delta:,.0f}",
-                    f"{r.yoy_pct:.1f}%",
-                    f"{r.priority_score:.3f}",
-                    key=r.customer_id,
-                )
-            except TypeError:
-                self.table.add_row(
-                    r.customer_id,
-                    f"${r.cy_sales:,.0f}",
-                    f"${r.py_sales:,.0f}",
-                    f"${r.yoy_delta:,.0f}",
-                    f"{r.yoy_pct:.1f}%",
-                    f"{r.priority_score:.3f}",
-                )
-        self._set_hint("Select a row and press Enter to open One‑Pager.")
 
-    async def key_r(self):
+        # Pull from store and cache
+        rows = self.store.decliners(limit=500)
+        self._all_rows = rows
+        self._apply_filter(self.search.value or "")
+        self._set_hint("Type to filter. Enter in search → move to table. Enter in table → open One‑Pager.")
+
+    # ---------- filtering ----------
+    def _apply_filter(self, q: str):
+        # Normalize search query
+        q_norm = (q or "").strip().lower()
+
+        self._clear_rows()
+
+        def row_norm_id(r):
+            # Normalize row id for robust matching (trim + lowercase)
+            return str(getattr(r, "customer_id", r[0] if isinstance(r, (list, tuple)) else "")).strip().lower()
+
+        def fmt(r):
+            return [
+                r.customer_id,
+                f"${r.cy_sales:,.0f}",
+                f"${r.py_sales:,.0f}",
+                f"${r.yoy_delta:,.0f}",
+                f"{r.yoy_pct:.1f}%",
+                f"{r.priority_score:.3f}",
+            ]
+
+        # First, try to find exact id match (prioritize it to show at top)
+        exact = None
+        if q_norm:
+            for r in self._all_rows:
+                if row_norm_id(r) == q_norm:
+                    exact = r
+                    break
+
+        shown = 0
+        used_exact_key = None
+
+        if exact is not None:
+            try:
+                self.table.add_row(*fmt(exact), key=exact.customer_id)
+                used_exact_key = exact.customer_id
+            except TypeError:
+                self.table.add_row(*fmt(exact))
+            shown += 1
+
+        # Then, add partial matches (excluding the exact already-added)
+        for r in self._all_rows:
+            if exact is not None and r is exact:
+                continue
+            if not q_norm or (q_norm in row_norm_id(r)):
+                try:
+                    self.table.add_row(*fmt(r), key=r.customer_id)
+                except TypeError:
+                    self.table.add_row(*fmt(r))
+                shown += 1
+                if shown >= 500:
+                    break
+
+        # Keep cursor sane
+        try:
+            if shown > 0:
+                self.table.cursor_coordinate = (0, 0)
+        except Exception:
+            pass
+
+        # Helpful hint
+        if q_norm:
+            if exact is not None:
+                self._set_hint(f"Exact match highlighted first • {shown} shown")
+            else:
+                self._set_hint(f"{shown} result(s) for “{q}”")
+        else:
+            self._set_hint(f"{shown} total rows")
+
+    # Live filter as user types
+    def on_input_changed(self, event: Input.Changed) -> None:
+        if event.input is self.search:
+            self._apply_filter(event.value)
+
+    # When user presses Enter in the search box
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        if event.input is self.search:
+            # If a single row is visible, open it; otherwise move focus to table
+            try:
+                rc = getattr(self.table, "row_count", 0)
+                if rc == 1:
+                    cust_id = self._read_customer_from_cursor()
+                    if cust_id:
+                        self.on_open_onepager(str(cust_id))
+                        return
+            except Exception:
+                pass
+            # Not a single match? Just move focus to table so arrows work
+            self.action_focus_table()
+
+    # ---------- key actions ----------
+    def action_focus_search(self):
+        try:
+            self.search.focus()
+        except Exception:
+            pass
+
+    def action_focus_table(self):
+        try:
+            self.table.focus()
+        except Exception:
+            pass
+
+    def action_clear_search(self):
+        try:
+            self.search.value = ""
+            self._apply_filter("")
+            self.table.focus()
+        except Exception:
+            pass
+
+    def action_refresh(self):
         self.refresh_rows()
 
-    # ---------- Event path A: DataTable emits a RowSelected on Enter/double-click ----------
+    def action_open_selected(self) -> None:
+        """Open One‑Pager from currently selected table row."""
+        try:
+            cust_id = self._read_customer_from_cursor()
+            if cust_id:
+                self.on_open_onepager(str(cust_id))
+        except Exception:
+            self._set_hint("Could not open One‑Pager (unexpected error).")
+
+    # Path A: newer Textual emits this on Enter/double‑click on a row
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        # Prevent any further bubbling that could quit the app
         try:
             event.stop()
         except Exception:
@@ -99,52 +220,29 @@ class DeclinersView(Vertical):
         try:
             cust_id = None
             try:
-                cust_id = event.row_key or None  # works on newer Textual when we set key=
+                cust_id = event.row_key or None
             except Exception:
-                cust_id = None
-
+                pass
             if not cust_id:
                 cust_id = self._read_customer_from_cursor()
-
             if cust_id:
-                self._set_hint(f"Opening One‑Pager for {cust_id}…")
-                # Non-async App callback; never awaits here
-                self.on_open_onepager(str(cust_id))
-        except Exception:
-            # Swallow everything; never exit the app
-            self._set_hint("Could not open One‑Pager (unexpected error).")
-
-    # ---------- Event path B: Our own Enter binding (fallback) ----------
-    def action_open_selected(self) -> None:
-        try:
-            cust_id = self._read_customer_from_cursor()
-            if cust_id:
-                self._set_hint(f"Opening One‑Pager for {cust_id}…")
                 self.on_open_onepager(str(cust_id))
         except Exception:
             self._set_hint("Could not open One‑Pager (unexpected error).")
 
     # ---------- helpers ----------
     def _read_customer_from_cursor(self):
-        """Read currently selected CustomerID from first column, robust to Textual version."""
         if getattr(self.table, "row_count", 0) == 0:
             return None
 
-        # Try modern API
-        row_index = None
+        # Prefer modern cursor_coordinate
+        row_index = 0
         try:
             cc = getattr(self.table, "cursor_coordinate", None)
             if cc is not None:
                 row_index = cc.row if hasattr(cc, "row") else cc[0]
         except Exception:
-            row_index = None
-
-        # Fallback: older API
-        if row_index is None:
-            try:
-                row_index = int(getattr(self.table, "cursor_row", 0))
-            except Exception:
-                row_index = 0
+            pass
 
         # Bounds
         try:
@@ -166,6 +264,7 @@ class DeclinersView(Vertical):
 
     def _set_hint(self, msg: str):
         try:
-            self._hint.update(msg)
+            self.hint.update(msg)
         except Exception:
             pass
+

@@ -11,10 +11,13 @@ from store import Store
 from views.decliners import DeclinersView
 from views.onepager import OnePagerView
 from views.formulas import FORMULAS, FormulaModal
+from views.growers import GrowersView   # <--- add
+
 
 # Left‑nav items: label -> view_id
 NAV_ITEMS = [
     ("Decliners", "decliners"),
+    ("Growers", "growers"),
     ("One‑Pager", "onepager"),
     ("Actions (placeholder)", "actions"),
     ("Impact (placeholder)", "impact"),
@@ -132,6 +135,9 @@ class YoYApp(App):
             # Pass NON‑ASYNC callback so the table can call it safely on Enter
             self.panel.mount(DeclinersView(self.store, self._open_onepager, self.theme_name))
             self._status("Decliners loaded. Select a row and press Enter.")
+        elif view_id == "growers":  # <--- add this block
+            self.panel.mount(GrowersView(self.store, self._open_onepager, self.theme_name))
+            self._status("Growers loaded. Select a row and press Enter.")
         elif view_id == "onepager":
             if self._last_customer:
                 self.panel.mount(OnePagerView(self.store, self._last_customer, self.theme_name))

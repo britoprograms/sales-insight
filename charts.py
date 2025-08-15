@@ -1,73 +1,72 @@
-# charts.py
-from typing import Any, Dict, Iterable, List, Sequence, Union, Optional
-try:
-    import pandas as pd  # optional
-except Exception:
-    pd = None  # type: ignore
+# charts.py — ECharts option builders for Sales Insight TUI
 
-Palette = Dict[str, Any]
+from typing import List, Dict, Any
 
-THEMES: Dict[str, Palette] = {
-    "dark":   {"bg":"#0b0f1a", "fg":"#cbd5e1", "axis":"#334155", "grid":"#1f2937",
-               "colors":["#60a5fa","#34d399","#f472b6","#fbbf24","#a78bfa"]},
-    "bright": {"bg":"#ffffff", "fg":"#111827", "axis":"#9ca3af", "grid":"#e5e7eb",
-               "colors":["#2563eb","#059669","#dc2626","#7c3aed","#0ea5e9"]},
-    "tokyo":  {"bg":"#1a1b26", "fg":"#c0caf5", "axis":"#565f89", "grid":"#2a2f44",
-               "colors":["#7aa2f7","#bb9af7","#9ece6a","#f7768e","#e0af68"]},
-    "barbie": {"bg":"#fff0f6", "fg":"#6b7280", "axis":"#f472b6", "grid":"#fde2e8",
-               "colors":["#ec4899","#f472b6","#fb7185","#fbbf24","#60a5fa"]},
-}
 
-Records = Union["pd.DataFrame", Iterable[Dict[str, Any]]]
+def option_from_sales(records: List[Dict[str, Any]], *, theme: str = "mono", title: str = "Weekly Sales"):
+    """
+    Build a simple line chart for weekly sales.
+    records: [{"week": "W01", "sales": 1234, "subcommodity": "X"}, ...]
+    """
+    weeks = [r.get("week") for r in records]
+    sales = [r.get("sales") for r in records]
 
-def option_from_sales(
-    data: Records,
-    category_col: str = "week",           # x-axis (e.g., "W1","W2",...)
-    value_col: str = "sales",             # y values
-    split_col: Optional[str] = "subcommodity",  # series split (None => single series)
-    theme: str = "dark",
-    title: str = "Sales",
-) -> Dict[str, Any]:
-    pal = THEMES.get(theme, THEMES["dark"])
+    def fg_for(t: str) -> str:
+        return "#111111" if t == "light" else "#ffffff"
 
-    # Normalize to list-of-dicts if pandas isn't present
-    if pd is not None and hasattr(data, "to_dict"):
-        records: List[Dict[str, Any]] = list(data.to_dict(orient="records"))  # type: ignore
-    else:
-        records = list(data)  # assume iterable of dicts
-
-    # Build axes + series
-    cats = sorted({r[category_col] for r in records})
-    if split_col:
-        series_keys = sorted({r[split_col] for r in records})
-    else:
-        series_keys = ["Series"]
-
-    # Map values
-    series: List[Dict[str, Any]] = []
-    for key in series_keys:
-        points = []
-        for c in cats:
-            v = 0
-            for r in records:
-                if r.get(category_col) == c and (not split_col or r.get(split_col) == key):
-                    v = r.get(value_col, 0) or 0
-                    break
-            points.append(v)
-        series.append({"type": "line", "name": str(key), "data": points, "smooth": True})
-
-    option = {
-        "backgroundColor": pal["bg"],
-        "color": pal["colors"],
-        "title": {"text": title, "left": "center", "textStyle": {"color": pal["fg"]}},
+    return {
+        "backgroundColor": "transparent",
+        "title": {"text": title, "left": "center", "textStyle": {"color": fg_for(theme)}},
         "tooltip": {"trigger": "axis"},
-        "legend": {"bottom": 0, "textStyle": {"color": pal["fg"]}},
-        "grid": {"left": 50, "right": 30, "top": 60, "bottom": 60},
-        "xAxis": {"type": "category", "data": cats,
-                  "axisLabel":{"color": pal["fg"]}, "axisLine":{"lineStyle":{"color": pal["axis"]}}},
-        "yAxis": {"type": "value",
-                  "axisLabel":{"color": pal["fg"]}, "splitLine":{"lineStyle":{"color": pal["grid"]}}},
-        "series": series,
+        "xAxis": {"type": "category", "data": weeks, "axisLabel": {"color": fg_for(theme)}},
+        "yAxis": {"type": "value", "axisLabel": {"color": fg_for(theme)}, "splitLine": {"show": False}},
+        "grid": {"left": 50, "right": 20, "top": 60, "bottom": 40},
+        "series": [
+            {"type": "line", "smooth": True, "data": sales}
+        ],
+        "animationDuration": 300,
     }
-    return option
+
+
+def option_compare_decliners_growers(
+    stats: Dict[str, Dict[str, float]],
+    *,
+    theme: str = "mono",
+    title: str = "Decliners vs Growers"
+):
+    """
+    Build an ECharts option that compares decliners vs growers.
+
+    stats = {
+      "decliners": {"count": int, "sum_delta": float},
+      "growers":   {"count": int, "sum_delta": float},
+    }
+    """
+    def palette(t: str):
+        if t == "light":
+            return {"fg": "#111111", "decl": "#0ea5e9", "grow": "#22c55e"}
+        if t == "matrix":
+            return {"fg": "#00ff7f", "decl": "#22d3ee", "grow": "#86efac"}
+        return {"fg": "#ffffff", "decl": "#60a5fa", "grow": "#34d399"}  # mono
+
+    p = palette(theme)
+
+    categories = ["Count", "Σ YoY Δ ($)"]
+    d_vals = [int(stats["decliners"]["count"]), round(float(stats["decliners"]["sum_delta"]), 2)]
+    g_vals = [int(stats["growers"]["count"]),   round(float(stats["growers"]["sum_delta"]), 2)]
+
+    return {
+        "backgroundColor": "transparent",
+        "title": {"text": title, "left": "center", "textStyle": {"color": p["fg"]}},
+        "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
+        "legend": {"data": ["Decliners", "Growers"], "top": 24, "textStyle": {"color": p["fg"]}},
+        "xAxis": {"type": "category", "data": categories, "axisLabel": {"color": p["fg"]}},
+        "yAxis": {"type": "value", "axisLabel": {"color": p["fg"]}, "splitLine": {"show": False}},
+        "series": [
+            {"name": "Decliners", "type": "bar", "data": d_vals, "barGap": "10%", "itemStyle": {"color": p["decl"]}},
+            {"name": "Growers",   "type": "bar", "data": g_vals, "itemStyle": {"color": p["grow"]}},
+        ],
+        "grid": {"left": 50, "right": 20, "top": 60, "bottom": 40},
+        "animationDuration": 250,
+    }
 

@@ -116,7 +116,8 @@ class Dashboard(Widget):
 
     def on_unmount(self) -> None:
         if self._timer:
-            self._timer.stop(); self._timer = None
+            self._timer.stop()
+            self._timer = None
 
     def _tick(self) -> None:
         self._sample()
@@ -211,8 +212,6 @@ class Dashboard(Widget):
         inner3 = max(4, w3 - 2)
 
         # Common subwidths for contents
-        # label area for "$x.xxM" right-aligned inside inner width
-        num_pad = 6  # spacing before number glyphs
         gauge_w1 = max(8, inner1 - 2)
         gauge_w2 = max(8, inner2 - 2)
         gauge_w3 = max(8, inner3 - 2)
@@ -268,17 +267,11 @@ class Dashboard(Widget):
         gtxt1 = _fit_text(self._gauge(g_now, gauge_w1, green, red), inner1)
         gtxt2 = _fit_text(self._gauge(d_now, gauge_w2, green, red), inner2)
         gtxt3 = _fit_text(self._gauge(n_now, gauge_w3, green, red), inner3)
-        out.append(Text("┃"))
-        out += gtxt1
-        out.append(Text("┃"))
+        out.append(Text("┃")); out += gtxt1; out.append(Text("┃"))
         out.append(Text(" "))
-        out.append(Text("┃"))
-        out += gtxt2
-        out.append(Text("┃"))
+        out.append(Text("┃")); out += gtxt2; out.append(Text("┃"))
         out.append(Text(" "))
-        out.append(Text("┃"))
-        out += gtxt3
-        out.append(Text("┃"))
+        out.append(Text("┃")); out += gtxt3; out.append(Text("┃"))
         out.append("\n")
 
         # Sparklines row (fixed width)
@@ -312,7 +305,10 @@ class Dashboard(Widget):
         out.append("\n")
 
         # Footer hint (clamped)
-        hint = _fit_text(Text(" Press ↑/↓ to change views • Enter opens One‑Pager • '/' to search • F formulas • T theme ", style="#667"), width)
+        hint = _fit_text(
+            Text(" Press ↑/↓ to change views • Enter opens One‑Pager • '/' to search • F formulas ", style="#667"),
+            width,
+        )
         out += hint
 
         return out

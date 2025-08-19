@@ -5,7 +5,7 @@ from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Footer, Static, ListView, ListItem, Label
 from textual.reactive import reactive
-
+from views.ai_modal import AIModal
 from config import load_config
 from themes import ORDER
 from store import Store
@@ -57,11 +57,18 @@ class YoYApp(App):
         ("escape", "quit", "Quit"),
         ("t", "cycle_theme", "Theme"),
         ("r", "refresh", "Refresh"),
+        ("a", "open_ai", "Ask AI"),
         ("f", "show_formulas", "Formulas"),
     ]
 
     theme_name = reactive("mono")
     current_view = reactive("decliners")
+    def action_open_ai(self) -> None:
+        try:
+            self.push_screen(AIModal("Ask AI"))
+            self._status("AI ready. Type and press Enter.")
+        except Exception as e:
+            self._status(f"AI modal failed: {e!r}")
 
     def __init__(self) -> None:
         super().__init__()

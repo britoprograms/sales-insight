@@ -20,7 +20,7 @@ class OnePagerView(Vertical):
     DEFAULT_CSS = """
     OnePagerView { height: 100%; }
     #hdr { padding: 1; }
-    .card { border: heavy white; padding: 1; }
+    .card { padding: 1; }
     #grid { grid-size: 2 3; gap: 1; }
     """
 

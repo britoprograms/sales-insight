@@ -8,6 +8,7 @@ from datetime import datetime
 from textual.widget import Widget
 from textual.reactive import reactive
 from textual.timer import Timer
+from themes import get_theme_colors
 from rich.text import Text
 
 
@@ -63,6 +64,7 @@ def human_money(v: float) -> str:
 
 
 class Dashboard(Widget):
+    
     """
     Live dashboard cards (fully clamped to their boxes):
       • Growers Up YoY
@@ -76,13 +78,10 @@ class Dashboard(Widget):
       - Every gauge/sparkline/label is clamped to the card's inner width, preventing overflow.
       - Shows a timestamp in the title.
     """
-
+    
     DEFAULT_CSS = """
     Dashboard {
         height: 1fr;
-        background: #0b0f1a;
-        color: #cbd5e1;
-        border: heavy #00d0ff;
         padding: 1 1;
         content-align: left top;
     }
@@ -90,9 +89,10 @@ class Dashboard(Widget):
 
     refresh_seconds = reactive(1.5)  # override with LIVE_DASH_INTERVAL
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, theme_name: str = "mono", *args, **kwargs) -> None:
         # allow id= / classes= / name= to pass through
         super().__init__(*args, **kwargs)
+        self.theme_name = theme_name
         self._timer: Timer | None = None
         self._hist_g: Deque[float] = deque(maxlen=200)   # growers $
         self._hist_d: Deque[float] = deque(maxlen=200)   # decliners $ (neg)
@@ -112,6 +112,19 @@ class Dashboard(Widget):
         for _ in range(24):
             self._sample(seed=True)
         self._timer = self.set_interval(self.refresh_seconds, self._tick)
+        self._apply_theme()
+        self.refresh()
+    
+    def _apply_theme(self) -> None:
+        """Apply current theme colors to dashboard border and styling."""
+        colors = get_theme_colors(self.theme_name)
+        self.styles.border = ("heavy", colors["accent"])
+        self.styles.color = colors["fg"]
+    
+    def update_theme(self, theme_name: str) -> None:
+        """Update theme and refresh styling."""
+        self.theme_name = theme_name
+        self._apply_theme()
         self.refresh()
 
     def on_unmount(self) -> None:

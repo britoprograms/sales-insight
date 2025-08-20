@@ -9,7 +9,7 @@ from textual.containers import Vertical, Horizontal
 class PromptModal(ModalScreen[None]):
     DEFAULT_CSS = """
     PromptModal { align: center middle; }
-    #wrap { width: 70%; border: round white; padding: 1 2; background: $panel; }
+    #wrap { width: 70%; padding: 1 2; background: $panel; }
     #prompt { width: 100%; }
     """
 

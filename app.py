@@ -7,7 +7,7 @@ from textual.widgets import Footer, Static, ListView, ListItem, Label
 from textual.reactive import reactive
 from views.ai_modal import AIModal
 from config import load_config
-from themes import ORDER
+from themes import ORDER, get_theme_colors
 from store import Store
 from views.decliners import DeclinersView
 from views.growers import GrowersView
@@ -31,25 +31,81 @@ class YoYApp(App):
     """YoY Sales TUI: permanent Dashboard on top; tabbed content below."""
 
     CSS = """
-    Screen.theme-mono { background: #000000; color: #FFFFFF; }
-    Screen.theme-matrix { background: #000000; color: #00FF7F; }
-    Screen.theme-light { background: #FFFFFF; color: #111111; }
-
+    /* Layout */
     #layout { height: 1fr; }
-
-    #sidebar { width: 28; border: heavy white; }
+    #sidebar { width: 28; }
     .nav-title { padding: 1 1; }
-
     #content { height: 1fr; padding: 0; }
-
-    /* Permanent top dashboard area (adjust height to taste) */
     #top_chart { height: 35%; min-height: 8; }
     #bottom    { height: 65%; }
-
     #panel { height: 1fr; padding: 1; }
-    #statusbar { height: 1; color: #AAAAAA; }
-
     Footer { dock: bottom; }
+
+    /* Theme Classes - Mono */
+    .theme-mono { background: #000000; color: #FFFFFF; }
+    .theme-mono #sidebar { border: heavy #FFFFFF; }
+    .theme-mono #statusbar { color: #AAAAAA; }
+    .theme-mono .nav-title { color: #FFFFFF; }
+    .theme-mono DataTable { background: #000000; color: #FFFFFF; }
+    .theme-mono DataTable > .datatable--header { background: #333333; color: #FFFFFF; }
+    .theme-mono DataTable > .datatable--cursor { background: #333333; }
+    .theme-mono ListView { background: #000000; color: #FFFFFF; }
+    .theme-mono ListItem { background: #000000; color: #FFFFFF; }
+    .theme-mono ListItem.--highlight { background: #333333; }
+    .theme-mono Static { color: #FFFFFF; }
+    .theme-mono Input { background: #333333; color: #FFFFFF; }
+    .theme-mono Vertical { background: #000000; color: #FFFFFF; }
+    .theme-mono Horizontal { background: #000000; color: #FFFFFF; }
+    .theme-mono .card { border: heavy #FFFFFF; }
+    .theme-mono Grid { background: #000000; }
+    .theme-mono ModalScreen { background: #000000 80%; }
+    .theme-mono .nav-item { color: #FFFFFF; }
+    .theme-mono .nav-item.--highlight { background: #333333; }
+    .theme-mono #wrap { border: round #FFFFFF; }
+
+    /* Theme Classes - Matrix */
+    .theme-matrix { background: #000000; color: #00FF7F; }
+    .theme-matrix #sidebar { border: heavy #00FF7F; }
+    .theme-matrix #statusbar { color: #00995a; }
+    .theme-matrix .nav-title { color: #00FF7F; }
+    .theme-matrix DataTable { background: #000000; color: #00FF7F; }
+    .theme-matrix DataTable > .datatable--header { background: #001a0a; color: #00FF7F; }
+    .theme-matrix DataTable > .datatable--cursor { background: #001a0a; }
+    .theme-matrix ListView { background: #000000; color: #00FF7F; }
+    .theme-matrix ListItem { background: #000000; color: #00FF7F; }
+    .theme-matrix ListItem.--highlight { background: #001a0a; }
+    .theme-matrix Static { color: #00FF7F; }
+    .theme-matrix Input { background: #001a0a; color: #00FF7F; }
+    .theme-matrix Vertical { background: #000000; color: #00FF7F; }
+    .theme-matrix Horizontal { background: #000000; color: #00FF7F; }
+    .theme-matrix .card { border: heavy #00FF7F; }
+    .theme-matrix Grid { background: #000000; }
+    .theme-matrix ModalScreen { background: #000000 80%; }
+    .theme-matrix .nav-item { color: #00FF7F; }
+    .theme-matrix .nav-item.--highlight { background: #001a0a; }
+    .theme-matrix #wrap { border: round #00FF7F; }
+
+    /* Theme Classes - Light */
+    .theme-light { background: #FFFFFF; color: #111111; }
+    .theme-light #sidebar { border: heavy #333333; }
+    .theme-light #statusbar { color: #777777; }
+    .theme-light .nav-title { color: #333333; }
+    .theme-light DataTable { background: #FFFFFF; color: #111111; }
+    .theme-light DataTable > .datatable--header { background: #F5F5F5; color: #111111; }
+    .theme-light DataTable > .datatable--cursor { background: #E5E5E5; }
+    .theme-light ListView { background: #FFFFFF; color: #111111; }
+    .theme-light ListItem { background: #FFFFFF; color: #111111; }
+    .theme-light ListItem.--highlight { background: #E5E5E5; }
+    .theme-light Static { color: #111111; }
+    .theme-light Input { background: #F5F5F5; color: #111111; }
+    .theme-light Vertical { background: #FFFFFF; color: #111111; }
+    .theme-light Horizontal { background: #FFFFFF; color: #111111; }
+    .theme-light .card { border: heavy #333333; }
+    .theme-light Grid { background: #FFFFFF; }
+    .theme-light ModalScreen { background: #FFFFFF 80%; }
+    .theme-light .nav-item { color: #111111; }
+    .theme-light .nav-item.--highlight { background: #E5E5E5; }
+    .theme-light #wrap { border: round #333333; }
     """
 
     # Only Esc quits the app. `q` does NOT quit.
@@ -84,9 +140,19 @@ class YoYApp(App):
         self._apply_theme()
 
     def _apply_theme(self) -> None:
+        # Remove old theme classes
         for cls in ("theme-mono", "theme-matrix", "theme-light"):
             self.remove_class(cls)
+        
+        # Apply new theme class - CSS handles the rest
         self.add_class(f"theme-{self.theme_name}")
+        
+        # Update the permanent dashboard theme
+        try:
+            if hasattr(self, 'dashboard'):
+                self.dashboard.update_theme(self.theme_name)
+        except Exception:
+            pass
 
     # -------- Layout --------
     def compose(self) -> ComposeResult:
@@ -99,7 +165,8 @@ class YoYApp(App):
 
             # Right side: top = Dashboard (fixed), bottom = tab content
             with Vertical(id="content"):
-                yield Dashboard(id="top_chart")  # permanent live dashboard
+                self.dashboard = Dashboard(self.theme_name, id="top_chart")
+                yield self.dashboard  # permanent live dashboard
                 with Vertical(id="bottom"):
                     self.panel = Vertical(id="panel")    # where views mount
                     yield self.panel
@@ -205,6 +272,8 @@ class YoYApp(App):
         i = ORDER.index(self.theme_name) if self.theme_name in ORDER else 0
         i = (i + 1) % len(ORDER)
         self.theme_name = ORDER[i]
+        # Refresh current view to apply new theme
+        self._show(self.current_view)
         self._status(f"Theme: {self.theme_name}")
 
     def action_refresh(self) -> None:

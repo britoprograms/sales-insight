@@ -5,13 +5,14 @@ from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Footer, Static, ListView, ListItem, Label
 from textual.reactive import reactive
-from views.ai_modal import AIModal
 from config import load_config
 from themes import ORDER, get_theme_colors
 from store import Store
+from services.ai import ensure_client_ready
 from views.decliners import DeclinersView
 from views.growers import GrowersView
 from views.onepager import OnePagerView
+from views.actions import ActionsView
 from views.formulas import FORMULAS, FormulaModal
 from views.dashboard import Dashboard
 
@@ -21,7 +22,7 @@ NAV_ITEMS = [
     ("Decliners", "decliners"),
     ("Growers", "growers"),
     ("One‑Pager", "onepager"),
-    ("Actions (placeholder)", "actions"),
+    ("Actions", "actions"),
     ("Impact (placeholder)", "impact"),
     ("Settings", "settings"),
 ]
@@ -53,6 +54,7 @@ class YoYApp(App):
     .theme-mono ListItem { background: #000000; color: #FFFFFF; }
     .theme-mono ListItem.--highlight { background: #333333; }
     .theme-mono Static { color: #FFFFFF; }
+    .theme-mono .action_text { color: #FFFFFF; }
     .theme-mono Input { background: #333333; color: #FFFFFF; }
     .theme-mono Vertical { background: #000000; color: #FFFFFF; }
     .theme-mono Horizontal { background: #000000; color: #FFFFFF; }
@@ -75,6 +77,7 @@ class YoYApp(App):
     .theme-matrix ListItem { background: #000000; color: #00FF7F; }
     .theme-matrix ListItem.--highlight { background: #001a0a; }
     .theme-matrix Static { color: #00FF7F; }
+    .theme-matrix .action_text { color: #00FF7F; }
     .theme-matrix Input { background: #001a0a; color: #00FF7F; }
     .theme-matrix Vertical { background: #000000; color: #00FF7F; }
     .theme-matrix Horizontal { background: #000000; color: #00FF7F; }
@@ -97,6 +100,7 @@ class YoYApp(App):
     .theme-light ListItem { background: #FFFFFF; color: #111111; }
     .theme-light ListItem.--highlight { background: #E5E5E5; }
     .theme-light Static { color: #111111; }
+    .theme-light .action_text { color: #111111; }
     .theme-light Input { background: #F5F5F5; color: #111111; }
     .theme-light Vertical { background: #FFFFFF; color: #111111; }
     .theme-light Horizontal { background: #FFFFFF; color: #111111; }
@@ -113,18 +117,11 @@ class YoYApp(App):
         ("escape", "quit", "Quit"),
         ("t", "cycle_theme", "Theme"),
         ("r", "refresh", "Refresh"),
-        ("a", "open_ai", "Ask AI"),
         ("f", "show_formulas", "Formulas"),
     ]
 
     theme_name = reactive("mono")
     current_view = reactive("decliners")
-    def action_open_ai(self) -> None:
-        try:
-            self.push_screen(AIModal("Ask AI"))
-            self._status("AI ready. Type and press Enter.")
-        except Exception as e:
-            self._status(f"AI modal failed: {e!r}")
 
     def __init__(self) -> None:
         super().__init__()
@@ -178,6 +175,10 @@ class YoYApp(App):
     def on_mount(self) -> None:
         self._apply_theme()
 
+        # Pre-initialize AI client in background for faster first use
+        import asyncio
+        asyncio.create_task(self._preload_ai_client())
+
         # Populate left nav AFTER ListView is mounted (avoids mount errors)
         lv = self.query_one("#nav", ListView)
         for label, vid in NAV_ITEMS:
@@ -191,6 +192,14 @@ class YoYApp(App):
 
         self._show("decliners")
         self._status("Dashboard live on top • Decliners loaded below. ↑/↓ to navigate, Enter to open a One‑Pager. '/' to search.")
+
+    async def _preload_ai_client(self) -> None:
+        """Pre-initialize AI client in background to eliminate first-use delay."""
+        try:
+            await ensure_client_ready()
+            self._status("AI ready")
+        except Exception:
+            pass  # Silently fail if AI isn't available
 
     # -------- Nav + Routing --------
     def on_list_view_selected(self, event: ListView.Selected) -> None:
@@ -231,8 +240,8 @@ class YoYApp(App):
                 self._status("No customer selected yet.")
 
         elif view_id == "actions":
-            self.panel.mount(Static("Actions (placeholder) — coming soon"))
-            self._status("Actions placeholder.")
+            self.panel.mount(ActionsView(self.store, self._open_onepager, self.theme_name))
+            self._status("Actions loaded. ↑/↓ to navigate, 'u' to update status, 'Del' to delete, 'r' to refresh.")
 
         elif view_id == "impact":
             self.panel.mount(Static("Impact (placeholder) — pre vs post YoY uplift"))

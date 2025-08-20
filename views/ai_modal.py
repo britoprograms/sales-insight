@@ -1,17 +1,14 @@
 
 # views/ai_modal.py
 from __future__ import annotations
-import threading, os
+import asyncio, os
 from textual.app import ComposeResult
 from textual.screen import ModalScreen
 from textual.containers import Vertical, Horizontal
 from textual.widgets import Input, Button, Label, Log
-from services.ai import get_client
+from services.ai import ensure_client_ready
 
-SQL_SYSTEM_DEFAULT = (
-    "You are an analytics assistant. The data lives in ClickHouse; "
-    "return ClickHouse-compatible raw SQL and a one-sentence rationale."
-)
+SQL_SYSTEM_DEFAULT = "SQL assistant. Be concise."  # Minimal system prompt for speed
 SQL_SYSTEM = os.getenv("AI_SYSTEM", SQL_SYSTEM_DEFAULT)
 
 class AIModal(ModalScreen[None]):
@@ -26,7 +23,6 @@ class AIModal(ModalScreen[None]):
     def __init__(self, title: str = "Ask AI") -> None:
         super().__init__()
         self._title = title
-        self._client = get_client()
         self._busy = False
 
     def compose(self) -> ComposeResult:
@@ -72,18 +68,39 @@ class AIModal(ModalScreen[None]):
         log.clear()
         log.write("[b]Thinking…[/b]")
 
-        def worker():
-            text = self._client.ask(prompt, system=SQL_SYSTEM)
-            def done():
-                try:
-                    log.clear()
-                    log.write(text or "(empty response)")
-                except Exception:
-                    pass
-                self._busy = False
-            self.app.call_from_thread(done)
-
-        threading.Thread(target=worker, daemon=True).start()
+        # Use Textual's native worker method instead of asyncio.create_task
+        self.run_worker(self._async_request(prompt, log), exclusive=True)
+    
+    async def _async_request(self, prompt: str, log: Log) -> None:
+        """Async request handler - eliminates threading overhead."""
+        import time
+        start_time = time.time()
+        print(f"DEBUG: Modal async_request started")
+        
+        try:
+            client_start = time.time()
+            client = await ensure_client_ready()
+            client_time = time.time() - client_start
+            print(f"DEBUG: Client ready in {client_time:.3f}s")
+            
+            ask_start = time.time()
+            text = await client.ask(prompt, system=SQL_SYSTEM)
+            ask_time = time.time() - ask_start
+            print(f"DEBUG: client.ask() completed in {ask_time:.3f}s")
+            
+            # Update UI directly (no call_from_thread needed)
+            log.clear()
+            log.write(text or "(empty response)")
+            
+            total_time = time.time() - start_time
+            print(f"DEBUG: Modal total time: {total_time:.3f}s")
+        except Exception as e:
+            log.clear()
+            log.write(f"Error: {str(e)}")
+            total_time = time.time() - start_time
+            print(f"DEBUG: Modal exception after {total_time:.3f}s: {e}")
+        finally:
+            self._busy = False
 
     def action_close(self) -> None:
         if not self._busy:

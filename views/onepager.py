@@ -2,9 +2,12 @@
 from textual.app import ComposeResult
 from textual.containers import Vertical, Grid
 from textual.widgets import Static
+import asyncio
 
 from charts import option_from_sales
 from chart_targets import BrowserChart  # native-free: only browser charts
+from services.ai import ensure_client_ready
+from views.action_modal import ActionSelectionModal
 
 
 class OnePagerView(Vertical):
@@ -24,9 +27,9 @@ class OnePagerView(Vertical):
     #grid { grid-size: 2 3; gap: 1; }
     """
 
-    # Only browser chart
     BINDINGS = [
         ("b", "chart_browser", "Browser Chart"),
+        ("g", "generate_actions", "Generate Actions"),
     ]
 
     can_focus = True  # ensure this view can receive key events
@@ -168,3 +171,52 @@ class OnePagerView(Vertical):
                 getattr(self.app, "_refocus_nav", lambda: None)()
             except Exception:
                 pass
+
+    def action_generate_actions(self):
+        """Generate recommended sales actions for this customer."""
+        if not self._data:
+            getattr(self.app, "_status", lambda m: None)("No customer data available.")
+            return
+            
+        try:
+            # Start async action generation
+            asyncio.create_task(self._generate_customer_actions())
+            getattr(self.app, "_status", lambda m: None)("Generating sales actions...")
+        except Exception as e:
+            getattr(self.app, "_status", lambda m: None)(f"Action generation error: {e}")
+    
+    async def _generate_customer_actions(self):
+        """Async method to generate and display customer actions."""
+        try:
+            # Get AI client and generate actions
+            client = await ensure_client_ready()
+            
+            # Prepare customer data for AI
+            headline = (self._data or {}).get("headline", {}) or {}
+            customer_data = {
+                'cy_sales': headline.get('cy_sales', 0),
+                'py_sales': headline.get('py_sales', 0),
+                'yoy_delta': headline.get('yoy_delta', 0),
+                'yoy_pct': headline.get('yoy_pct', 0)
+            }
+            
+            # Generate actions using AI
+            actions_text = await client.generate_sales_actions(self.customer_id, customer_data)
+            
+            # Debug: Show what we got from AI
+            getattr(self.app, "_status", lambda m: None)(f"AI Response length: {len(actions_text)} chars")
+            
+            # Open action selection modal
+            def on_actions_confirmed(selected_actions):
+                count = len(selected_actions)
+                getattr(self.app, "_status", lambda m: None)(f"Added {count} actions for {self.customer_id}")
+            
+            modal = ActionSelectionModal(
+                self.customer_id, 
+                actions_text, 
+                on_confirm=on_actions_confirmed
+            )
+            self.app.push_screen(modal)
+            
+        except Exception as e:
+            getattr(self.app, "_status", lambda m: None)(f"Error generating actions: {e}")

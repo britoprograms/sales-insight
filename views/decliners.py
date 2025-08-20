@@ -220,7 +220,17 @@ class DeclinersView(Vertical):
         try:
             cust_id = None
             try:
-                cust_id = event.row_key or None
+                # Extract string value from RowKey object
+                row_key = event.row_key
+                if row_key is not None:
+                    # Try to get the actual value from RowKey
+                    if hasattr(row_key, 'value'):
+                        cust_id = str(row_key.value)
+                    elif hasattr(row_key, '_key'):
+                        cust_id = str(row_key._key)
+                    else:
+                        # Fall back to reading from table data
+                        cust_id = self._read_customer_from_cursor()
             except Exception:
                 pass
             if not cust_id:

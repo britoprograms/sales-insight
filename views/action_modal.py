@@ -39,6 +39,27 @@ class ActionSelectionModal(ModalScreen[None]):
     }
     .action_text {
         margin: 0 0 1 0;
+        padding: 0 1;
+        text-wrap: auto;
+    }
+    
+    /* Theme-specific styling for action text visibility */
+    .theme-mono .action_text { 
+        color: #FFFFFF !important; 
+        background: transparent;
+    }
+    .theme-matrix .action_text { 
+        color: #FFFFFF !important; 
+        background: transparent;
+    }
+    .theme-light .action_text { 
+        color: #111111 !important; 
+        background: transparent;
+    }
+    
+    /* Fallback styling if theme isn't applied */
+    ActionSelectionModal .action_text {
+        color: #FFFFFF;
     }
     #button_bar {
         height: 3;
@@ -112,6 +133,16 @@ class ActionSelectionModal(ModalScreen[None]):
         
         print(f"DEBUG: Final parsed actions: {actions}")
         return actions[:6]  # Limit to 6 actions max
+    
+    def on_mount(self) -> None:
+        """Apply theme when modal is mounted."""
+        try:
+            # Get current theme from parent app and apply to modal
+            theme_name = getattr(self.app, 'theme_name', 'mono')
+            self.add_class(f"theme-{theme_name}")
+        except Exception:
+            # Fallback to mono theme if theme detection fails
+            self.add_class("theme-mono")
     
     def compose(self) -> ComposeResult:
         with Vertical(id="action_modal"):

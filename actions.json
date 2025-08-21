@@ -1,0 +1,34 @@
+[
+  {
+    "action_id": "4c05a2e3",
+    "customer_id": "CUST0042",
+    "description": "**Review and Adjust Pricing Strategy**: Since the YoY sales increase is positive but performance is declining, consider a targeted pricing adjustment for CUST0042. Implement a temporary discount on high-demand products to stimulate higher volume purchases without significantly impacting profit margins.",
+    "date_accepted": "2025-08-21T11:49:53.799795",
+    "review_date": "2025-10-02T11:49:53.799795",
+    "status": "Complete"
+  },
+  {
+    "action_id": "862c8402",
+    "customer_id": "CUST0042",
+    "description": "**Enhance Product Positioning**: Analyze which product categories are underperforming and focus marketing efforts on these areas. Consider highlighting unique features or benefits that differentiate your offerings from competitors, especially in the declining categories, to regain customer interest.",
+    "date_accepted": "2025-08-21T11:49:53.799922",
+    "review_date": "2025-10-02T11:49:53.799922",
+    "status": "In-Progress"
+  },
+  {
+    "action_id": "bd85f58f",
+    "customer_id": "CUST0042",
+    "description": "**Implement a Personalized Customer Engagement Plan**: Initiate a series of personalized outreach activities such as one-on-one meetings with key decision-makers at CUST0042, offering tailored solutions based on their specific needs and past purchase history. This could include custom product bundles or exclusive promotions designed to increase loyalty and sales volume.",
+    "date_accepted": "2025-08-21T11:49:53.800008",
+    "review_date": "2025-10-02T11:49:53.800008",
+    "status": "In-Progress"
+  },
+  {
+    "action_id": "6b474d34",
+    "customer_id": "CUST0042",
+    "description": "**Optimize Inventory Management**: Based on historical sales data for CUST0042, adjust inventory levels to ensure that there is",
+    "date_accepted": "2025-08-21T11:49:53.809740",
+    "review_date": "2025-10-02T11:49:53.809740",
+    "status": "In-Progress"
+  }
+]

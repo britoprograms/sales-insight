@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import List, Optional, Dict
 import uuid
+import json
+import os
 
 class ActionStatus(Enum):
     """Status of a sales action."""
@@ -48,10 +50,12 @@ class Action:
         return datetime.now() > self.review_date and self.status != ActionStatus.COMPLETE
 
 class ActionStore:
-    """In-memory storage for actions."""
+    """Persistent storage for actions using JSON file."""
     
-    def __init__(self):
+    def __init__(self, filename: str = "actions.json"):
+        self._filename = filename
         self._actions: List[Action] = []
+        self._load_from_file()
     
     def add_action(self, customer_id: str, description: str) -> Action:
         """Add a new action for tracking."""
@@ -61,6 +65,7 @@ class ActionStore:
             date_accepted=datetime.now()
         )
         self._actions.append(action)
+        self._save_to_file()
         return action
     
     def get_all_actions(self) -> List[Action]:
@@ -80,6 +85,7 @@ class ActionStore:
         for i, action in enumerate(self._actions):
             if action.action_id == action_id:
                 del self._actions[i]
+                self._save_to_file()
                 return True
         return False
     
@@ -88,6 +94,7 @@ class ActionStore:
         for action in self._actions:
             if action.action_id == action_id:
                 action.status = status
+                self._save_to_file()
                 return True
         return False
     
@@ -108,6 +115,46 @@ class ActionStore:
         for status in ActionStatus:
             counts[status.value] = len(self.get_actions_by_status(status))
         return counts
+    
+    def _load_from_file(self) -> None:
+        """Load actions from JSON file."""
+        try:
+            if os.path.exists(self._filename):
+                with open(self._filename, 'r') as f:
+                    data = json.load(f)
+                    self._actions = []
+                    for item in data:
+                        action = Action(
+                            action_id=item['action_id'],
+                            customer_id=item['customer_id'],
+                            description=item['description'],
+                            date_accepted=datetime.fromisoformat(item['date_accepted']),
+                            status=ActionStatus(item['status'])
+                        )
+                        action.review_date = datetime.fromisoformat(item['review_date'])
+                        self._actions.append(action)
+        except Exception:
+            # If file is corrupted or any error, start with empty list
+            self._actions = []
+    
+    def _save_to_file(self) -> None:
+        """Save actions to JSON file."""
+        try:
+            data = []
+            for action in self._actions:
+                data.append({
+                    'action_id': action.action_id,
+                    'customer_id': action.customer_id,
+                    'description': action.description,
+                    'date_accepted': action.date_accepted.isoformat(),
+                    'review_date': action.review_date.isoformat(),
+                    'status': action.status.value
+                })
+            with open(self._filename, 'w') as f:
+                json.dump(data, f, indent=2)
+        except Exception:
+            # Silently fail if save doesn't work
+            pass
 
 # Global action store instance
 _action_store = None

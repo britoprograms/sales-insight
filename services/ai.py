@@ -19,8 +19,8 @@ def _load_env():
 # Ensure .env is loaded
 _load_env()
 
-DEFAULT_BASE = os.getenv("AI_BASE_URL", "http://localhost:8000/v1")
-DEFAULT_MODEL = os.getenv("AI_MODEL", "./models/qwen.gguf")  # Updated fallback
+DEFAULT_BASE = os.getenv("AI_BASE_URL", "http://localhost:8080/v1")
+DEFAULT_MODEL = os.getenv("AI_MODEL", "Meta-Llama-3-8B-Instruct-Q5_K_M")
 DEFAULT_KEY = os.getenv("AI_API_KEY", "sk-local")
 
 class AIClient:
@@ -36,17 +36,16 @@ class AIClient:
         self.model = model
         self.timeout = timeout
         # Use httpx async client with simple configuration
+        base_headers = {"Connection": "keep-alive"}
+        if self.key and self.key.strip():
+            base_headers["Authorization"] = f"Bearer {self.key}"
+        
         self._client = httpx.AsyncClient(
             timeout=httpx.Timeout(timeout),
             limits=httpx.Limits(max_keepalive_connections=2, max_connections=5),
-            headers={
-                "Authorization": f"Bearer {self.key}",
-                "Connection": "keep-alive"
-            },
-            # Force HTTP/1.1 to avoid negotiation delays
+            headers=base_headers,
             http2=False,
-            # Disable SSL verification for localhost
-            verify=False
+            verify=False  # Disable SSL verification for localhost
         )
 
     async def ask(self, prompt: str, system: Optional[str] = None) -> str:

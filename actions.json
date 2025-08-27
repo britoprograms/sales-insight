@@ -1,34 +1,50 @@
 [
   {
-    "action_id": "4c05a2e3",
-    "customer_id": "CUST0042",
-    "description": "**Review and Adjust Pricing Strategy**: Since the YoY sales increase is positive but performance is declining, consider a targeted pricing adjustment for CUST0042. Implement a temporary discount on high-demand products to stimulate higher volume purchases without significantly impacting profit margins.",
-    "date_accepted": "2025-08-21T11:49:53.799795",
-    "review_date": "2025-10-02T11:49:53.799795",
-    "status": "Complete"
-  },
-  {
-    "action_id": "862c8402",
-    "customer_id": "CUST0042",
-    "description": "**Enhance Product Positioning**: Analyze which product categories are underperforming and focus marketing efforts on these areas. Consider highlighting unique features or benefits that differentiate your offerings from competitors, especially in the declining categories, to regain customer interest.",
-    "date_accepted": "2025-08-21T11:49:53.799922",
-    "review_date": "2025-10-02T11:49:53.799922",
+    "action_id": "4ff5f48b",
+    "customer_id": "CUST0316",
+    "description": "**Targeted Outreach**: Schedule a dedicated meeting with the customer's key decision-maker to discuss their current pain points and how the product/service can better address their needs. This will help to re-engage the customer and identify potential upsell opportunities.",
+    "date_accepted": "2025-08-26T13:33:59.060052",
+    "review_date": "2025-10-07T13:33:59.060052",
     "status": "In-Progress"
   },
   {
-    "action_id": "bd85f58f",
-    "customer_id": "CUST0042",
-    "description": "**Implement a Personalized Customer Engagement Plan**: Initiate a series of personalized outreach activities such as one-on-one meetings with key decision-makers at CUST0042, offering tailored solutions based on their specific needs and past purchase history. This could include custom product bundles or exclusive promotions designed to increase loyalty and sales volume.",
-    "date_accepted": "2025-08-21T11:49:53.800008",
-    "review_date": "2025-10-02T11:49:53.800008",
+    "action_id": "2ec7077f",
+    "customer_id": "CUST0316",
+    "description": "**Product Positioning**: Highlight the unique features and benefits of the product/service that differentiate it from competitors, and provide a customized solution that addresses the customer's specific needs. This will help to reposition the product in the customer's mind and increase the perceived value, potentially leading to increased sales and loyalty.",
+    "date_accepted": "2025-08-26T13:33:59.060174",
+    "review_date": "2025-10-07T13:33:59.060174",
     "status": "In-Progress"
   },
   {
-    "action_id": "6b474d34",
-    "customer_id": "CUST0042",
-    "description": "**Optimize Inventory Management**: Based on historical sales data for CUST0042, adjust inventory levels to ensure that there is",
-    "date_accepted": "2025-08-21T11:49:53.809740",
-    "review_date": "2025-10-02T11:49:53.809740",
+    "action_id": "e9deae27",
+    "customer_id": "CUST0206",
+    "description": "**Targeted Outreach**: Send a personalized email to CUST0206 with a 30-day sales forecast and a call-to-action to discuss a potential price increase or bundle deal. This will help re-engage the customer and demonstrate the value of the product.",
+    "date_accepted": "2025-08-27T13:20:15.792302",
+    "review_date": "2025-10-08T13:20:15.792302",
+    "status": "In-Progress"
+  },
+  {
+    "action_id": "3caa0859",
+    "customer_id": "CUST0175",
+    "description": "**Targeted Outreach**: Send a personalized email to CUST0175 with a 20% discount offer on the current year's product, highlighting the benefits of upgrading to the next year's product to improve their business performance.",
+    "date_accepted": "2025-08-27T13:21:59.811309",
+    "review_date": "2025-10-08T13:21:59.811309",
+    "status": "In-Progress"
+  },
+  {
+    "action_id": "8b3dc046",
+    "customer_id": "CUST0175",
+    "description": "**Product Positioning**: Update the product positioning and messaging to emphasize the value of the current year's product, highlighting its features and benefits that will help CUST0175 improve their business performance and reduce their costs.",
+    "date_accepted": "2025-08-27T13:21:59.820994",
+    "review_date": "2025-10-08T13:21:59.820994",
+    "status": "In-Progress"
+  },
+  {
+    "action_id": "13058ab8",
+    "customer_id": "CUST0168",
+    "description": "**Pricing Adjustment**: Adjust the price of the product or service by 2.5% to $161,111 to reduce the YoY decline and encourage a price-sensitive customer.",
+    "date_accepted": "2025-08-27T13:32:37.528120",
+    "review_date": "2025-10-08T13:32:37.528120",
     "status": "In-Progress"
   }
 ]

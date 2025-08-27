@@ -10,6 +10,8 @@ class AppConfig:
     ch_database: str | None
     ai_provider: str | None
     ai_api_key: str | None
+    ai_base_url: str | None
+    ai_model: str | None
 
     @property
     def has_clickhouse(self) -> bool:
@@ -33,5 +35,7 @@ def load_config() -> AppConfig:
         ch_database=os.getenv("CH_DATABASE", "default"),
         ai_provider=os.getenv("AI_PROVIDER"),
         ai_api_key=os.getenv("AI_API_KEY"),
+        ai_base_url=os.getenv("AI_BASE_URL"),
+        ai_model=os.getenv("AI_MODEL"),
     )
 

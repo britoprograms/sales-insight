@@ -15,6 +15,7 @@ from views.onepager import OnePagerView
 from views.actions import ActionsView
 from views.formulas import FORMULAS, FormulaModal
 from views.dashboard import Dashboard
+from views.leader_menu import LeaderMenuManager
 
 
 # Left nav items (Dashboard is permanent now, so it’s not a tab)
@@ -118,6 +119,9 @@ class YoYApp(App):
         ("t", "cycle_theme", "Theme"),
         ("r", "refresh", "Refresh"),
         ("f", "show_formulas", "Formulas"),
+        ("space", "show_leader_menu", "Leader Menu"),
+        ("tab", "cycle_tab", "Next Tab"),
+        ("shift+tab", "cycle_tab_reverse", "Previous Tab"),
     ]
 
     theme_name = reactive("mono")
@@ -299,6 +303,45 @@ class YoYApp(App):
             ctx = "growers"
         text = FORMULAS.get(ctx, "# Formulas\nNo formulas registered for this view yet.")
         self.push_screen(FormulaModal(text))
+
+    def action_show_leader_menu(self) -> None:
+        """Show the leader key menu for current context"""
+        LeaderMenuManager.show_leader_menu(self, self.current_view)
+
+    def action_cycle_tab(self) -> None:
+        """Cycle to the next tab"""
+        self._cycle_tab_direction(1)
+
+    def action_cycle_tab_reverse(self) -> None:
+        """Cycle to the previous tab"""
+        self._cycle_tab_direction(-1)
+
+    def _cycle_tab_direction(self, direction: int) -> None:
+        """Internal method to cycle tabs in given direction (1 for forward, -1 for backward)"""
+        # Get current tab index
+        current_index = 0
+        for i, (_, vid) in enumerate(NAV_ITEMS):
+            if vid == self.current_view:
+                current_index = i
+                break
+        
+        # Calculate next index with wrapping
+        next_index = (current_index + direction) % len(NAV_ITEMS)
+        next_view_id = NAV_ITEMS[next_index][1]
+        
+        # Update navigation selection
+        try:
+            nav = self.query_one("#nav", ListView)
+            nav.index = next_index
+        except Exception:
+            pass
+        
+        # Show the new view
+        self._show(next_view_id)
+        
+        # Update status with direction indicator
+        direction_text = "→" if direction == 1 else "←"
+        self._status(f"Tab {direction_text} {NAV_ITEMS[next_index][0]}")
 
 
 if __name__ == "__main__":

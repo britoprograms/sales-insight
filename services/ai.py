@@ -63,7 +63,7 @@ class AIClient:
             "model": self.model,
             "messages": messages,
             "temperature": 0.0,  # Zero temperature for fastest generation
-            "max_tokens": 200,   # Increased for action generation
+            "max_tokens": 400,   # Increased for action generation
             "top_p": 0.8,       # Focus on most likely tokens  
             "stream": False,    # Non-streaming
         }

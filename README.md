@@ -36,15 +36,20 @@ Switch between mono, light, and matrix themes.
 
 ⌨️ Fully Keyboard-Driven Navigation
 
-↑/↓ — Navigate sidebar
+**Navigation**
+- ↑/↓ — Navigate sidebar
+- Tab / Shift+Tab — Cycle through tabs
+- Enter — Open view
 
-Enter — Open view
+**Actions**  
+- Space — Leader menu (shows all available keys)
+- b — Open browser chart
+- f — Show formulas
+- t — Cycle themes
+- r — Refresh view
 
-b — Open browser chart
-
-f — Show formulas
-
-Esc — Quit
+**System**
+- Esc — Quit
 
 🛠 Architecture
 Python

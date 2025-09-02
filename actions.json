@@ -8,14 +8,6 @@
     "status": "In-Progress"
   },
   {
-    "action_id": "2ec7077f",
-    "customer_id": "CUST0316",
-    "description": "**Product Positioning**: Highlight the unique features and benefits of the product/service that differentiate it from competitors, and provide a customized solution that addresses the customer's specific needs. This will help to reposition the product in the customer's mind and increase the perceived value, potentially leading to increased sales and loyalty.",
-    "date_accepted": "2025-08-26T13:33:59.060174",
-    "review_date": "2025-10-07T13:33:59.060174",
-    "status": "In-Progress"
-  },
-  {
     "action_id": "e9deae27",
     "customer_id": "CUST0206",
     "description": "**Targeted Outreach**: Send a personalized email to CUST0206 with a 30-day sales forecast and a call-to-action to discuss a potential price increase or bundle deal. This will help re-engage the customer and demonstrate the value of the product.",
@@ -45,6 +37,70 @@
     "description": "**Pricing Adjustment**: Adjust the price of the product or service by 2.5% to $161,111 to reduce the YoY decline and encourage a price-sensitive customer.",
     "date_accepted": "2025-08-27T13:32:37.528120",
     "review_date": "2025-10-08T13:32:37.528120",
+    "status": "In-Progress"
+  },
+  {
+    "action_id": "2a80e59d",
+    "customer_id": "CUST0327",
+    "description": "**Targeted Outreach**: Identify and target CUST0327's key decision-makers (e.g., purchasing manager, IT director) for a personalized meeting to discuss the product's value proposition and potential upgrade opportunities.",
+    "date_accepted": "2025-08-27T15:57:01.796825",
+    "review_date": "2025-10-08T15:57:01.796825",
+    "status": "In-Progress"
+  },
+  {
+    "action_id": "75200922",
+    "customer_id": "CUST0327",
+    "description": "**Inventory Management**: Reduce inventory levels by 10% to free up space and reduce the risk of stockouts, which may further exacerbate the decline in sales. This will also help to clear out old inventory and make room for new products.",
+    "date_accepted": "2025-08-27T15:57:01.796978",
+    "review_date": "2025-10-08T15:57:01.796978",
+    "status": "In-Progress"
+  },
+  {
+    "action_id": "2ee56264",
+    "customer_id": "CUST0101",
+    "description": "**Targeted Outreach**: Reach out to CUST0101's decision-makers via phone or email to discuss their current challenges and opportunities, and explore potential upsell or cross-sell opportunities.",
+    "date_accepted": "2025-08-28T11:06:06.518698",
+    "review_date": "2025-10-09T11:06:06.518698",
+    "status": "In-Progress"
+  },
+  {
+    "action_id": "025257ee",
+    "customer_id": "CUST0101",
+    "description": "**Product Positioning**: Update CUST0101's product information to reflect the changing market landscape and customer needs, highlighting the benefits of the product or service in a more compelling way to justify a higher price point.",
+    "date_accepted": "2025-08-28T11:06:06.518855",
+    "review_date": "2025-10-09T11:06:06.518855",
+    "status": "In-Progress"
+  },
+  {
+    "action_id": "39b57e69",
+    "customer_id": "CUST0101",
+    "description": "**Product Positioning**: Update the customer's product catalog to highlight the features and benefits of the next year's product, emphasizing how it addresses the customer's current pain points and provides a better value proposition. This will help CUST0101 see the value in upgrading to the next year's product and reduce the likelihood of them declining further.",
+    "date_accepted": "2025-08-28T11:10:50.042315",
+    "review_date": "2025-10-09T11:10:50.042315",
+    "status": "In-Progress"
+  },
+  {
+    "action_id": "c44b6966",
+    "customer_id": "CUST0321",
+    "description": "**Product Positioning**: Update CUST0321's product information to reflect the current year's sales, highlighting the value proposition and competitive advantages of the product. This will help to reposition the product in the customer's mind and increase the likelihood of a successful sale.",
+    "date_accepted": "2025-08-28T19:35:40.691785",
+    "review_date": "2025-10-09T19:35:40.691785",
+    "status": "In-Progress"
+  },
+  {
+    "action_id": "a178406b",
+    "customer_id": "CUST0151",
+    "description": "**Targeted Outreach**: Reach out to CUST0151 via phone or email to discuss their current purchase history, identify any potential upsell or cross-sell opportunities, and explore ways to improve their overall customer experience.",
+    "date_accepted": "2025-09-02T10:51:00.217357",
+    "review_date": "2025-10-14T10:51:00.217357",
+    "status": "In-Progress"
+  },
+  {
+    "action_id": "8df0fbfc",
+    "customer_id": "CUST0151",
+    "description": "**Product Positioning**: Update the product or service description on the CRM system to highlight the key benefits and features that may be driving the decline in sales, such as \"Our product is designed to help you [achieve a specific goal] and has been a trusted partner for [number] of customers in the past.\"",
+    "date_accepted": "2025-09-02T10:51:00.217568",
+    "review_date": "2025-10-14T10:51:00.217568",
     "status": "In-Progress"
   }
 ]
